@@ -40,6 +40,8 @@ int main(int argc, char *argv[])
 	dir = opendir (argv[1]);
 
 	FILE *fin, *fout, *fin2;
+	char path[4096];
+	strcpy(path,argv[1]);
 	char*  fileName = malloc(WORD_MAX_SIZE*sizeof(char));
 	char lineBuffer[LINE_MAX_SIZE];
 	char wordToSearch[WORD_MAX_SIZE];
@@ -49,9 +51,9 @@ int main(int argc, char *argv[])
 	int file_count = 0;
 	int match = 0;
 	//Ciclo para abrir o diretorio e começar a procurar ficheiros a começar pelo words.txt
-	fin = fopen("words.txt", "rt");
-	fin2 = fopen("fileToSearch.txt", "rt"); //fopen(fileNames[numberFiles], rt);
-	fout = fopen("output.txt", "wt"); //fopen("temp" + numberFiles, wt);
+	//fin = fopen("words.txt", "rt");
+	//fin2 = fopen("fileToSearch.txt", "rt"); //fopen(fileNames[numberFiles], rt);
+	//fout = fopen("output.txt", "wt"); //fopen("temp" + numberFiles, wt);
 
 	if (dir != NULL)
 	{
@@ -68,7 +70,7 @@ int main(int argc, char *argv[])
 					strcpy(fileNames[file_count], fileName);
 					file_count++;
 
-				}
+				}	
 				
 				if(!strcmp(fileName,"words"))
 				{
@@ -97,28 +99,32 @@ int main(int argc, char *argv[])
     	int numberFiles= 0;
     	char openTemp[WORD_MAX_SIZE];
     	char finalTemp[WORD_MAX_SIZE];
+    	pid_t v , wpid;
     	for(numberFiles; numberFiles < file_count; ++numberFiles)
     	{
-    		pid_t v , wpid;
+    		
     		v = fork();
     		wpid = waitpid(v, NULL,WNOHANG);
 
     		if(v==0) 
     		{
-
+    			strcat(path,"/");
+    			strcpy(openTemp,path);
+    			strcpy(finalTemp,path);
     			fin = fopen("words.txt", "rt");
-    			strcpy(openTemp,fileNames[numberFiles]);
+    			strcat(openTemp,fileNames[numberFiles]);
     			strcat(openTemp, ".txt");
     			fin2 = fopen(openTemp, "rt");
-    			strcpy(finalTemp,fileNames[numberFiles]);
+    			strcat(finalTemp,fileNames[numberFiles]);
     			strcat(finalTemp,"temp");
     			fout = fopen(finalTemp,"wt");
  				//Percorrer todo o ficheiro
- 				printf("READING FILE %s\n", fileNames[numberFiles]);
+    			printf("READING FILE %s\n", fileNames[numberFiles]);
     			while(fgets(lineBuffer, LINE_MAX_SIZE, fin) != NULL)
     			{
 					strcpy(wordToSearch,lineBuffer); //FAZER SPLIT E TRIM PARA LIMPAR ESPAÇOS E /n
 					trim(wordToSearch);
+					printf("Word to search %s on File %s\n",wordToSearch,fileNames[numberFiles] );
 					while(fgets(lineBuffer, LINE_MAX_SIZE, fin2) != NULL)
 					{
 						if((aux = strstr(lineBuffer, wordToSearch)) != NULL )
@@ -137,12 +143,15 @@ int main(int argc, char *argv[])
 					fin2 = fopen(openTemp, "rt");
 				}
 			}
-		
 		}
-		sleep(1500);
-	return 0;
-}
-
+		if(v > 0){
+			//Concatenar todos os ficheiro temporarios 
+			//Esperar que todos os processos filhos terminem
+			puts("I AM YOUR FATHER\n");
+			sleep(5);
+		}
+		return 0;
+	}
 //}
 /*int openFile(File *fileToOpen){};
 int closeFile(File *fileToClose){};
