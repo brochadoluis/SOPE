@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <dirent.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -28,6 +29,12 @@ void removeExtension(char *input)
 	}
 }
 
+pid_t child_pid = -1;
+void kill_child(int sig)
+{
+    kill(child_pid,SIGKILL);
+}
+
 //Criar estrutura com palavra-nomeFicheiro-linha e criar array de estruturas.
 //Percorrer o array 1 vez por cada palavra.
 int main(int argc, char *argv[])
@@ -50,6 +57,7 @@ int main(int argc, char *argv[])
 	int lineNo = 1;
 	int file_count = 0;
 	int match = 0;
+	int status = 0;
 	//Ciclo para abrir o diretorio e começar a procurar ficheiros a começar pelo words.txt
 	//fin = fopen("words.txt", "rt");
 	//fin2 = fopen("fileToSearch.txt", "rt"); //fopen(fileNames[numberFiles], rt);
@@ -99,14 +107,15 @@ int main(int argc, char *argv[])
     	int numberFiles= 0;
     	char openTemp[WORD_MAX_SIZE];
     	char finalTemp[WORD_MAX_SIZE];
-    	pid_t v , wpid;
+    	pid_t pid ,pidSon;
+    	//wpid = waitpid(v, NULL,WNOHANG);
     	for(numberFiles; numberFiles < file_count; ++numberFiles)
     	{
+    		signal(SIGALRM,(void (*)(int))kill_child);
+    		pid = fork();
     		
-    		v = fork();
-    		wpid = waitpid(v, NULL,WNOHANG);
 
-    		if(v==0) 
+    		if(pid==0) 
     		{
     			strcat(path,"/");
     			strcpy(openTemp,path);
@@ -142,14 +151,18 @@ int main(int argc, char *argv[])
 					lineNo = 1;
 					fin2 = fopen(openTemp, "rt");
 				}
+				//exit(1);
 			}
 		}
-		if(v > 0){
+			if(pid > 0){
+				while(pidSon = wait(NULL)){puts("I AM YOUR FATHER\n");}
 			//Concatenar todos os ficheiro temporarios 
 			//Esperar que todos os processos filhos terminem
-			puts("I AM YOUR FATHER\n");
-			sleep(5);
+			//while ((wpid = wait(&status)) > 0){ // this way, the father waits for all the child processes 
+			
 		}
+			sleep(5);
+		
 		return 0;
 	}
 //}
